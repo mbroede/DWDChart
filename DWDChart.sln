@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DWDChart", "DWDChart\DWDChart.csproj", "{0B3DD247-C328-442E-9E0C-D48F576F4140}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErstelleDataSet", "ErstelleDataSet\ErstelleDataSet.csproj", "{2C37DF31-F29F-4508-824F-3C9F3C4F892A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0B3DD247-C328-442E-9E0C-D48F576F4140}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B3DD247-C328-442E-9E0C-D48F576F4140}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B3DD247-C328-442E-9E0C-D48F576F4140}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B3DD247-C328-442E-9E0C-D48F576F4140}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C37DF31-F29F-4508-824F-3C9F3C4F892A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C37DF31-F29F-4508-824F-3C9F3C4F892A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C37DF31-F29F-4508-824F-3C9F3C4F892A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C37DF31-F29F-4508-824F-3C9F3C4F892A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60EDF3F1-16BC-4796-919C-0BF620CBA0F3}
+	EndGlobalSection
+EndGlobal
