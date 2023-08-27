@@ -4,8 +4,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace CreateDataSet
 {
@@ -39,11 +37,11 @@ namespace CreateDataSet
         {
             public TMBR(string typ, string station, DateTime datum, float wert, int status = 0)
             {
-                this.Typ = typ;
+                this.Typ = typ; // Kennzahl Temperatur, Winde, Bewölkung usw.
                 this.Station = station;
                 this.Datum = datum;
                 this.Wert = wert;
-                this.Status = status; // 1 = fehlender Wert wurde aus Durchschnitt ergänzt
+                this.Status = status; // 0 = nicht angefaßt, 1 = fehlender Wert wurde aus Durchschnitt ergänzt
             }
 
             public string Typ { get; set; }
@@ -83,6 +81,9 @@ namespace CreateDataSet
 
             ErzeugeMonatsliste();
             ErzeugeDataSet();
+
+            Console.WriteLine("Beenden mit Return-Taste...");
+            Console.ReadLine();
         }
         #endregion
 
@@ -90,11 +91,13 @@ namespace CreateDataSet
         #region -- DWDEinlesen --
         private static void DWDEinlesen()
         {
+            Console.WriteLine("DWD-Dateien einlesen");
+
             DirectoryInfo di = new DirectoryInfo(Path.Combine(_pfadData, "DWD"));
             FileInfo[] files = di.GetFiles("*.csv");
             foreach (var file in files)
             {
-                Console.WriteLine("Einlesen Datei " + file.Name);
+                Console.WriteLine("- Datei " + file.Name);
 
                 string line = String.Empty;
                 int k = 0;
@@ -109,7 +112,7 @@ namespace CreateDataSet
                             //  0              1        2             3      4                5
                             // "OBS_DEU_P1D_T5CM_N","1303","1936-02-01","6","0","5",
                             DateTime dtZeit = DateTime.Parse(token[2].Trim('"'));
-                            if (dtZeit.Year >= 1948)
+                            if (dtZeit.Year >= 1947)
                             {
                                 TDWD dwd = new TDWD(token[0], token[1], token[2], token[3], token[4], token[5]);
                                 _lstDWD.Add(dwd);
@@ -133,6 +136,7 @@ namespace CreateDataSet
         private static void DWDToMBR()
         {
             Console.WriteLine("DWD-Liste in MBR-Liste konvertieren");
+
             foreach (var dwd in _lstDWD)
             {
                 string typ = dwd.Produkt_Code;
@@ -156,6 +160,7 @@ namespace CreateDataSet
         private static void MBRKorrektur()
         {
             Console.WriteLine("Temp-Listen für Windmessung in Trier anlegen");
+
             List<TMBR> trier = new List<TMBR>();
             foreach (var dwd in _lstDWD)
             {
@@ -193,7 +198,8 @@ namespace CreateDataSet
                 }
             }
 
-            Console.WriteLine("MBR-Liste vervollständigen");
+            Console.WriteLine("MBR-Liste aus Temp-Listen vervollständigen");
+
             int n = 0;
             foreach (var tm in trierMittelwert)
             {
@@ -202,7 +208,7 @@ namespace CreateDataSet
                 {
                     TMBR mbr = new TMBR(tm.Typ, tm.Station, tm.Datum, tm.Wert, 1);
                     _lstMBRTag.Add(mbr);
-                    Console.WriteLine(string.Format("Satz {0} eingefügt, {1}/{2}", mbr, n, trierMittelwert.Count));
+                    Console.WriteLine(string.Format("- Satz {0} eingefügt, {1}/{2}", mbr, n, trierMittelwert.Count));
                 }
                 n++;
             }
@@ -219,7 +225,8 @@ namespace CreateDataSet
         #region -- MBRCheck --
         private static void MBRCheck()
         {
-            Console.WriteLine("MBR-Liste prüfen");
+            Console.WriteLine("MBR-Liste auf Datumslücken prüfen");
+
             int aktzeptiert = 10;
             foreach (string typ in _lstTypen)
             {
@@ -235,14 +242,14 @@ namespace CreateDataSet
                             deltaDays = (t2.Datum.Date - t1.Datum.Date).Days;
                             if (deltaDays > aktzeptiert)
                             {
-                                Console.WriteLine(t1.ToString() + " " + t2.ToString() + " " + deltaDays);
+                                Console.WriteLine("- Lücke: " + t1.ToString() + " " + t2.ToString() + " " + deltaDays);
                             }
                         }
                     }
                 }
             }
 
-            Console.WriteLine("Press return...");
+            Console.WriteLine("Weiter mit Return-Taste...");
             Console.ReadLine();
 
         }
@@ -252,6 +259,7 @@ namespace CreateDataSet
         private static void MBRDuplikateEntfernen()
         {
             Console.WriteLine("Dublikate entfernen");
+
             // zur Sicherheit, aktuell keine Duplikate gefunden
             for (int i = 0; i < _lstMBRTag.Count - 1; i++)
             {
@@ -269,7 +277,8 @@ namespace CreateDataSet
         #region -- MBRLueckenAuffuellen --
         private static void MBRLueckenAuffuellen()
         {
-            Console.WriteLine("Lücken auffüllen");
+            Console.WriteLine("Lücken mit Schnittwerten auffüllen");
+
             foreach (string typ in _lstTypen)
             {
                 foreach (string station in _lstStationen)
@@ -316,7 +325,7 @@ namespace CreateDataSet
                             && t1.Station == station && t2.Station == station
                             && t1.Datum.AddDays(1) != t2.Datum)
                         {
-                            throw new Exception(string.Format("Zeile {0}: Item: {1}", i, t1));
+                            throw new Exception(string.Format("- Fehler in Zeile {0}: Item: {1}", i, t1));
                         }
                     }
                 }
@@ -328,6 +337,7 @@ namespace CreateDataSet
         private static void ErzeugeMonatsliste()
         {
             Console.WriteLine("MBR-Monatsliste erzeugen");
+
             int jahr = _lstMBRTag[0].Datum.Year;
             int monat = _lstMBRTag[0].Datum.Month;
             int anzahlTage = 0;
@@ -358,6 +368,7 @@ namespace CreateDataSet
         private static void ErzeugeDataSet()
         {
             Console.WriteLine("DataSet erzeugen und speichern");
+
             DataSet ds = new DataSet();
             DataTable dtable = new DataTable();
             dtable.Columns.Add("Typ", typeof(System.String));

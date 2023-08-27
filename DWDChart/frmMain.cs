@@ -22,9 +22,18 @@ namespace DWDChart
 {
     public partial class frmMain : Form
     {
+        #region -- enum --
+        enum ChartModus
+        {
+            Jahre,
+            Monat,
+        }
+        #endregion
+
         #region -- Variablen --
         private DataSet _data;
         private DataTable _table;
+        private ChartModus _chartmodus;
         #endregion
 
         #region -- ctor --
@@ -44,7 +53,7 @@ namespace DWDChart
         private void frmMain_Load(object sender, EventArgs e)
         {
             this.Text = System.IO.Path.GetFileNameWithoutExtension(Application.ExecutablePath);
-            this.MinimumSize = new Size(820, 600);
+            this.MinimumSize = new Size(850, 600);
             this.panTop.BorderStyle = BorderStyle.FixedSingle;
             this.tcMain.SelectedIndex = 0;
             this.chartDWD.Dock = DockStyle.Fill;
@@ -91,18 +100,26 @@ namespace DWDChart
                 new DataColumn("KurzBez", typeof(string)),
                 new DataColumn("Beschreibung", typeof(string)),
             });
+
             dtabDropDown.Rows.Add("Temperatur [°C]", "OBS_DEU_P1D_T2M",
                 "temperatur", 
                 "Tägliche Stationsmessungen der mittleren Lufttemperatur in 2 m Höhe in °C");
+
             dtabDropDown.Rows.Add("Niederschlagshöhe [mm]", "OBS_DEU_P1D_RR", 
                 "niederschlag",
-                "Tägliche Stationsmessungen der Niederschlagshöhe in mm");
+@"Tägliche Stationsmessungen der Niederschlagshöhe in mm
+---------------------------------------------------------------------------------------------------
+1 mm / m² = 1 Liter
+Schnee, Graupel, Hagel und dergleichen feste Aggregatzustände des Niederschlags werden geschmolzen. 
+Das Volumen das Schmelzwassers wird in die Niederschlagshöhe eingerechnet.");
+            
             dtabDropDown.Rows.Add("Windgeschwindigkeit [m/s]", "OBS_DEU_P1D_F", 
                 "wind",
 @"Tagesmittel der Stationsmessungen der mittleren Windgeschwindigkeit in ca. 10 m Höhe in m/s
+---------------------------------------------------------------------------------------------------
 Umrechnung m/s in Beaufort (Bft):
     m/s       Bft  Beschreibung
-------------  ---  -----------------------------------------------------------------------------  
+------------  ---  --------------------------------------------------------------------------------  
        < 0.3   0   Windstille - Rauch steigt senkrecht auf
  0.3 - < 1.6   1   Leiser Zug - Windrichtung angezeigt durch den Zug des Rauches
  1.6 - < 3.4   2   Leichte Brise - Wind im Gesicht spürbar, Blätter und Windfahnen bewegen sich
@@ -116,9 +133,21 @@ Umrechnung m/s in Beaufort (Bft):
 24.5 - <28.5  10   Schwerer Sturm - Wind bricht Bäume, größere Schäden an Häusern
 28.5 - <32.7  11   Orkanartiger Sturm - Wind entwurzelt Bäume, verbreitet Sturmschäden
 32.7          12   Orkan - schwere Verwüstungen");
+            
             dtabDropDown.Rows.Add("Bewölkung [n/8]", "OBS_DEU_P1D_N",
                 "bewölkung",
-                "Tägliche Stationsmessungen des mittleren Bedeckungsgrades in Achtel");
+@"Tägliche Stationsmessungen des mittleren Bedeckungsgrades in Achtel
+---------------------------------------------------------------------------------------------------
+Bezeichnung                             Erläuterung
+--------------------------------------  -----------------------------------------------------------
+wolkenlos, sonnig | klar (nur nachts)   Gesamtbedeckungsgrad 0/8
+leicht bewölkt | heiter (nur tagsüber)  Bedeckungsgrad tiefer und mittelhoher Wolken 1 bis 3/8  (*)
+wolkig	                                Bedeckungsgrad tiefer und mittelhoher Wolken 4 bis 6/8  (*)
+stark bewölkt	                        Bedeckungsgrad tiefer und mittelhoher Wolken 7/8        (*)
+bedeckt oder trüb                       Bedeckungsgrad tiefer und mittelhoher Wolken 8/8; trüb, wenn
+                                        tiefe Bewölkung einen Bedeckungsgrad von 8/8 hat
+---------------------------------------------------------------------------------------------------
+(*) hohe Wolken bis 8/8 möglich");
             this.cbKennzahl.Items.Clear();
             this.cbKennzahl.DropDownStyle = ComboBoxStyle.DropDownList;
             this.cbKennzahl.DisplayMember = "Text";
@@ -126,6 +155,24 @@ Umrechnung m/s in Beaufort (Bft):
             this.cbKennzahl.DataSource = dtabDropDown;
             this.cbKennzahl.SelectedIndex = 0;
             this.cbKennzahl.SelectedIndexChanged += CbKennzahl_SelectedIndexChanged;
+
+            this.cbJahr.Items.Clear();
+            this.cbJahr.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.cbJahr.Items.Add("");
+            int jahrVon = int.MaxValue;
+            int jahrBis = int.MinValue;
+            foreach (DataRow row in _table.Rows)
+            {
+                int jahr = row.Field<DateTime>("Datum").Year;
+                if (jahr < jahrVon) jahrVon = jahr;
+                if (jahr > jahrBis) jahrBis = jahr;
+            }
+            for (int j = jahrVon; j <= jahrBis; j++)
+            {
+                this.cbJahr.Items.Add(j.ToString());
+            }
+            this.cbJahr.SelectedIndex = 0;
+            this.cbJahr.SelectedIndexChanged += CbJahr_SelectedIndexChanged;
 
             this.cbMonat.Items.Clear();
             this.cbMonat.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -162,7 +209,7 @@ Umrechnung m/s in Beaufort (Bft):
         }
         #endregion
 
-        #region -- Events Controls --
+        #region -- Events Filter Controls --
         private void CbStation_SelectedIndexChanged(object sender, EventArgs e)
         {
             DiagramZeichnen();
@@ -173,10 +220,24 @@ Umrechnung m/s in Beaufort (Bft):
             DiagramZeichnen();
         }
 
+        private void CbJahr_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Wenn ein Jahr vorgegeben wird, dann den Tag auf 0 setzen,
+            // um den ganzen Monat im Diagramm anzuzeigen.
+            if (this.cbJahr.SelectedIndex > 0)
+            {
+                this.cbTag.SelectedIndexChanged -= CbTag_SelectedIndexChanged;
+                this.cbTag.SelectedIndex = 0;
+                this.cbTag.SelectedIndexChanged += CbTag_SelectedIndexChanged;
+            }
+            _chartmodus = this.cbJahr.SelectedIndex == 0 ? ChartModus.Jahre : ChartModus.Monat;
+            DiagramZeichnen();
+        }
+
         private void CbMonat_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Nach Änderung des Monats die Tage aktualisieren. Dabei den aktuell eingestellten
-            // Tag merken und für den neuen Monat wieder einstellen - wenn möglich.
+            // Tag merken und für den neuen Monat wieder einstellen (wenn möglich).
             int aktuellerTag = this.cbTag.Items.Count > 0 ? this.cbTag.SelectedIndex : 0;
             int monat = this.cbMonat.SelectedIndex + 1;
             int anzahlTage = DateTime.DaysInMonth(1999, monat); // Schaltjahre außen vor lassen
@@ -190,13 +251,25 @@ Umrechnung m/s in Beaufort (Bft):
             this.cbTag.MaxDropDownItems = anzahlTage + 1;
             this.cbTag.SelectedIndex = aktuellerTag <= anzahlTage ? aktuellerTag : anzahlTage;
             this.cbTag.SelectedIndexChanged += CbTag_SelectedIndexChanged;
-            CbTag_SelectedIndexChanged(null, null);
+            _chartmodus = this.cbJahr.SelectedIndex == 0 ? ChartModus.Jahre : ChartModus.Monat;
+            DiagramZeichnen();
         }
 
         private void CbTag_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // Wenn ein konkreter Tag ausgewählt wurde, dann das Jahr zurücksetzen
+            if (this.cbTag.SelectedIndex > 0 && this.cbJahr.SelectedIndex > 0)
+            {
+                this.cbJahr.SelectedIndexChanged -= CbJahr_SelectedIndexChanged;
+                this.cbJahr.SelectedIndex = 0;
+                this.cbJahr.SelectedIndexChanged += CbJahr_SelectedIndexChanged;
+            }
+            _chartmodus = this.cbJahr.SelectedIndex == 0 ? ChartModus.Jahre : ChartModus.Monat;
             DiagramZeichnen();
         }
+        #endregion
+
+        #region -- Events sonstige Controls --
 
         private void mnuDateiSpeichern_Click(object sender, EventArgs e)
         {
@@ -233,6 +306,7 @@ Umrechnung m/s in Beaufort (Bft):
         {
             string kennzahl = this.cbKennzahl.SelectedValue.ToString();
             string station = this.cbStation.SelectedValue.ToString();
+            int jahr = this.cbJahr.SelectedIndex > 0 ? Convert.ToInt32(this.cbJahr.Text) : -1;
             int monat = this.cbMonat.SelectedIndex + 1;
             int tag = this.cbTag.SelectedIndex == 0 ? -1 : this.cbTag.SelectedIndex;
             DataTable dtable = new DataTable();
@@ -243,25 +317,52 @@ Umrechnung m/s in Beaufort (Bft):
                 new DataColumn("Status", typeof(int)),
             });
             DataRow row;
-            foreach (DataRow dr in _table.Rows)
+            if (_chartmodus == ChartModus.Monat)
             {
-                if (dr["Typ"].ToString() == kennzahl
-                    && dr["Station"].ToString() == station
-                    && Convert.ToInt32(dr["Monat"]) == monat
-                    && Convert.ToInt32(dr["Tag"]) == tag)
+                // Zeitschiene: Monat
+                DateTime dtRow;
+                DateTime dtVon = new DateTime(jahr, monat, 1);
+                DateTime dtBis = dtVon.AddMonths(1).AddDays(-1); // Monatsletzter
+                foreach (DataRow dr in _table.Rows)
                 {
-                    row = dtable.NewRow();
-                    row["Datum"] = dr["Datum"];
-                    row["Wert"] = dr["Wert"];
-                    row["Status"] = dr["Status"];
-                    dtable.Rows.Add(row);
+                    dtRow = (DateTime)dr["Datum"];
+                    if (dr["Typ"].ToString() == kennzahl
+                        && dr["Station"].ToString() == station
+                        && Convert.ToInt32(dr["Tag"]) != -1 // -1 = Monatswert
+                        && dtRow >= dtVon
+                        && dtRow <= dtBis)
+                    {
+                        row = dtable.NewRow();
+                        row["Datum"] = dr["Datum"];
+                        row["Wert"] = dr["Wert"];
+                        row["Status"] = dr["Status"];
+                        dtable.Rows.Add(row);
+                    }
+                }
+            }
+            else
+            {
+                // Zeitschiene: Jahre
+                foreach (DataRow dr in _table.Rows)
+                {
+                    if (dr["Typ"].ToString() == kennzahl
+                        && dr["Station"].ToString() == station
+                        && Convert.ToInt32(dr["Monat"]) == monat
+                        && Convert.ToInt32(dr["Tag"]) == tag)
+                    {
+                        row = dtable.NewRow();
+                        row["Datum"] = dr["Datum"];
+                        row["Wert"] = dr["Wert"];
+                        row["Status"] = dr["Status"];
+                        dtable.Rows.Add(row);
+                    }
                 }
             }
             dtable.AcceptChanges();
             this.gridDWD.DataSource = dtable;
             foreach (DataGridViewColumn col in this.gridDWD.Columns)
             {
-                col.SortMode = DataGridViewColumnSortMode.Automatic;
+                col.SortMode = DataGridViewColumnSortMode.Automatic; // Sortieren erlauben
             }
         }
         #endregion
@@ -272,27 +373,40 @@ Umrechnung m/s in Beaufort (Bft):
             ResetChart();
             FillGrid();
 
+            DateTime dtDatum;
             DataTable dtable = (DataTable)this.gridDWD.DataSource;
+
             // Zur Sicherheit
             if (dtable == null || dtable.Rows.Count == 0)
             {
                 return;
             }
 
-            DateTime dtDatum;
-            dtDatum = (DateTime)dtable.Rows[0].ItemArray[0];
-            int jahrVon = dtDatum.Year;
-            dtDatum = (DateTime)dtable.Rows[dtable.Rows.Count - 1].ItemArray[0];
-            int jahrBis = dtDatum.Year;
+            // Limits der X-Achse
+            int x_von = 0;
+            int x_bis = 0;
+            switch (_chartmodus)
+            {
+                case ChartModus.Jahre:
+                    x_von = dtable.Rows[0].Field<DateTime>("Datum").Year;
+                    x_bis = dtable.Rows[dtable.Rows.Count - 1].Field<DateTime>("Datum").Year;
+                    break;
+                case ChartModus.Monat:
+                    x_von = 0;
+                    x_bis = dtable.Rows.Count - 1;
+                    break;
+                default:
+                    break;
+            }
 
             // Zur Sicherheit
-            if (jahrBis <= jahrVon)
+            if (x_bis <= x_von)
             {
                 return;
             }
 
             // Koordinaten und Intervalle einrichten
-            int cnt = jahrBis - jahrVon + 1;
+            int cnt = x_bis - x_von + 1;
             double[] x = new double[cnt];
             double[] y = new double[cnt];
             int [] stat = new int[cnt];
@@ -302,7 +416,7 @@ Umrechnung m/s in Beaufort (Bft):
             int y_max = int.MinValue;
             for (int i = 0; i < cnt; i++)
             {
-                x[i] = jahrVon + i;
+                x[i] = x_von + i;
                 y[i] = Math.Round(Convert.ToDouble(dtable.Rows[i].ItemArray[1]), 1);
                 stat[i] = Convert.ToInt32(dtable.Rows[i].ItemArray[2]);
                 x_min = Convert.ToInt32(Math.Round(x[i], 0)) - 1 < x_min ? Convert.ToInt32(Math.Round(x[i], 0)) - 1 : x_min;
@@ -382,7 +496,7 @@ Umrechnung m/s in Beaufort (Bft):
             area.AxisX.Maximum = x_max;
             area.AxisX.Interval = 5;
             area.AxisX.TitleFont = new Font("Arial", 10, FontStyle.Bold);
-            area.AxisX.Title = "Jahr";
+            area.AxisX.Title = _chartmodus == ChartModus.Jahre ? "Jahr" : string.Format("{0} {1}", this.cbMonat.Text, this.cbJahr.Text);
 
             area.AxisY.MajorGrid.Enabled = true;
             area.AxisY.MajorGrid.LineDashStyle = ChartDashStyle.Dot;
@@ -395,30 +509,42 @@ Umrechnung m/s in Beaufort (Bft):
             area.AxisY.Interval = 5;
             area.AxisY.IsStartedFromZero = false;
             area.AxisY.TitleFont = new Font("Arial", 10, FontStyle.Bold);
+            area.AxisY.Title = this.cbKennzahl.Text;
 
-            string titel = this.cbKennzahl.Text;
-            area.AxisY.Title = titel;
-
-            if (cbTag.SelectedIndex == 0)
+            string caption = (_chartmodus == ChartModus.Jahre && this.cbTag.SelectedIndex == 0 ? "Mittlere " : "") + this.cbKennzahl.Text;
+            switch (_chartmodus)
             {
-                titel = string.Format("Mittlere {0} im {1}", titel, this.cbMonat.Text);
+                case ChartModus.Jahre:
+                    caption += cbTag.SelectedIndex == 0 
+                        ? string.Format(" im {0}", this.cbMonat.Text) 
+                        : string.Format(" am {0}. {1}", this.cbTag.Text, this.cbMonat.Text);
+                    caption += string.Format(" von {0} bis {1}", x_von, x_bis);
+                    break;
+                case ChartModus.Monat:
+                    caption += string.Format(" vom {0:dd.MM.yyyy} bis {1:dd.MM.yyyy}",
+                        dtable.Rows[0].Field<DateTime>("Datum"),
+                        dtable.Rows[dtable.Rows.Count - 1].Field<DateTime>("Datum"));
+                    break;
+                default:
+                    break;
             }
-            else
-            {
-                titel = titel + " am " + cbTag.Text + ". " + cbMonat.Text;
-            }
-            titel += string.Format(" von {0} bis {1} - {2}", jahrVon, jahrBis, this.cbStation.Text); 
+            caption += " - " + this.cbStation.Text;
 
             Title title = new Title();
             title.Font = new Font("Arial", 10, FontStyle.Bold);
             title.ForeColor = Color.Black;
-            title.Text = titel;
+            title.Text = caption;
             this.chartDWD.Titles.Add(title);
 
+            dtDatum = dtable.Rows[0].Field<DateTime>("Datum");
             for (int i = 0; i < x.Length; i++)
             {
                 double y_reg = a_x + b_x * x[i];
                 this.chartDWD.Series["Wert"].Points.AddXY(x[i], y[i]);
+                if (_chartmodus == ChartModus.Monat)
+                {
+                    this.chartDWD.Series["Wert"].Points[i].AxisLabel = dtDatum.AddDays(i).ToString("dd.MM.yyyy");
+                }
                 if (stat[i] == 1)
                 {
                     this.chartDWD.Series["Wert"].Points[i].LabelForeColor = Color.Red;
@@ -431,12 +557,36 @@ Umrechnung m/s in Beaufort (Bft):
         #region -- DiagrammSpeichern --
         private void DiagrammSpeichern()
         {
+            DataTable dtable = (DataTable)this.gridDWD.DataSource;
+            if (dtable == null || dtable.Rows.Count == 0)
+            {
+                return;
+            }
+
             string s = @"dwdchart"
                 + "_" + GetStationKurzBez()
-                + "_" + GetKennzahlKurzBez()
-                + "_" + this.cbMonat.Text
-                + (this.cbTag.SelectedIndex > 0 ? ("_" + this.cbTag.Text) : "");
-            string fname = GetFileNameBySavedialog("Chart speichern", s, new string[] { "jpg", "png", "bmp" }, "jpg", true);
+                + "_" + GetKennzahlKurzBez();
+            switch (_chartmodus)
+            {
+                case ChartModus.Jahre:
+                    // JahrVon_JahrBis_Monat_Tag
+                    s += "_"
+                        + dtable.Rows[0].Field<DateTime>("Datum").Year.ToString() + "_"
+                        + dtable.Rows[dtable.Rows.Count - 1].Field<DateTime>("Datum").Year.ToString() + "_"
+                        + this.cbMonat.Text 
+                        + (this.cbTag.SelectedIndex > 0 ? ("_" + this.cbTag.Text) : "");
+                    break;
+                case ChartModus.Monat:
+                    // Jahr_Monat
+                    s += "_"
+                        + dtable.Rows[0].Field<DateTime>("Datum").Year.ToString() + "_"
+                        + this.cbMonat.Text;
+                    break;
+                default:
+                    break;
+            }
+
+            string fname = GetFileNameBySavedialog("Chart speichern", s.ToLower(), new string[] { "jpg", "png", "bmp" }, "jpg", true);
             if (!string.IsNullOrEmpty(fname))
             {
                 ChartImageFormat format = new ChartImageFormat();

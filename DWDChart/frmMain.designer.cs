@@ -57,6 +57,8 @@
             this.panBottom = new System.Windows.Forms.Panel();
             this.txtInfo = new System.Windows.Forms.TextBox();
             this.picLogo = new System.Windows.Forms.PictureBox();
+            this.cbJahr = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.panTop.SuspendLayout();
             this.menuMain.SuspendLayout();
@@ -68,6 +70,46 @@
             this.panBottom.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picLogo)).BeginInit();
             this.SuspendLayout();
+            // 
+            // cbStation
+            // 
+            this.cbStation.FormattingEnabled = true;
+            this.cbStation.Location = new System.Drawing.Point(12, 22);
+            this.cbStation.Name = "cbStation";
+            this.cbStation.Size = new System.Drawing.Size(282, 21);
+            this.cbStation.TabIndex = 1;
+            // 
+            // cbKennzahl
+            // 
+            this.cbKennzahl.FormattingEnabled = true;
+            this.cbKennzahl.Location = new System.Drawing.Point(303, 22);
+            this.cbKennzahl.Name = "cbKennzahl";
+            this.cbKennzahl.Size = new System.Drawing.Size(161, 21);
+            this.cbKennzahl.TabIndex = 2;
+            // 
+            // cbJahr
+            // 
+            this.cbJahr.FormattingEnabled = true;
+            this.cbJahr.Location = new System.Drawing.Point(472, 22);
+            this.cbJahr.Name = "cbJahr";
+            this.cbJahr.Size = new System.Drawing.Size(82, 21);
+            this.cbJahr.TabIndex = 3;
+            // 
+            // cbMonat
+            // 
+            this.cbMonat.FormattingEnabled = true;
+            this.cbMonat.Location = new System.Drawing.Point(561, 22);
+            this.cbMonat.Name = "cbMonat";
+            this.cbMonat.Size = new System.Drawing.Size(82, 21);
+            this.cbMonat.TabIndex = 4;
+            // 
+            // cbTag
+            // 
+            this.cbTag.FormattingEnabled = true;
+            this.cbTag.Location = new System.Drawing.Point(650, 22);
+            this.cbTag.Name = "cbTag";
+            this.cbTag.Size = new System.Drawing.Size(50, 21);
+            this.cbTag.TabIndex = 5;
             // 
             // statusStrip1
             // 
@@ -97,7 +139,9 @@
             // 
             this.panTop.Controls.Add(this.label4);
             this.panTop.Controls.Add(this.cbTag);
+            this.panTop.Controls.Add(this.label5);
             this.panTop.Controls.Add(this.label3);
+            this.panTop.Controls.Add(this.cbJahr);
             this.panTop.Controls.Add(this.cbMonat);
             this.panTop.Controls.Add(this.label2);
             this.panTop.Controls.Add(this.cbKennzahl);
@@ -112,36 +156,20 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(558, 6);
+            this.label4.Location = new System.Drawing.Point(649, 6);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(26, 13);
             this.label4.TabIndex = 7;
             this.label4.Text = "Tag";
             // 
-            // cbTag
-            // 
-            this.cbTag.FormattingEnabled = true;
-            this.cbTag.Location = new System.Drawing.Point(559, 22);
-            this.cbTag.Name = "cbTag";
-            this.cbTag.Size = new System.Drawing.Size(50, 21);
-            this.cbTag.TabIndex = 6;
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(470, 6);
+            this.label3.Location = new System.Drawing.Point(560, 6);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(37, 13);
             this.label3.TabIndex = 5;
             this.label3.Text = "Monat";
-            // 
-            // cbMonat
-            // 
-            this.cbMonat.FormattingEnabled = true;
-            this.cbMonat.Location = new System.Drawing.Point(471, 22);
-            this.cbMonat.Name = "cbMonat";
-            this.cbMonat.Size = new System.Drawing.Size(82, 21);
-            this.cbMonat.TabIndex = 4;
             // 
             // label2
             // 
@@ -149,16 +177,8 @@
             this.label2.Location = new System.Drawing.Point(302, 6);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(51, 13);
-            this.label2.TabIndex = 3;
+            this.label2.TabIndex = 6;
             this.label2.Text = "Kennzahl";
-            // 
-            // cbKennzahl
-            // 
-            this.cbKennzahl.FormattingEnabled = true;
-            this.cbKennzahl.Location = new System.Drawing.Point(303, 22);
-            this.cbKennzahl.Name = "cbKennzahl";
-            this.cbKennzahl.Size = new System.Drawing.Size(161, 21);
-            this.cbKennzahl.TabIndex = 2;
             // 
             // label1
             // 
@@ -166,16 +186,8 @@
             this.label1.Location = new System.Drawing.Point(11, 6);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(40, 13);
-            this.label1.TabIndex = 1;
+            this.label1.TabIndex = 8;
             this.label1.Text = "Station";
-            // 
-            // cbStation
-            // 
-            this.cbStation.FormattingEnabled = true;
-            this.cbStation.Location = new System.Drawing.Point(12, 22);
-            this.cbStation.Name = "cbStation";
-            this.cbStation.Size = new System.Drawing.Size(282, 21);
-            this.cbStation.TabIndex = 0;
             // 
             // menuMain
             // 
@@ -184,7 +196,7 @@
             this.menuMain.Location = new System.Drawing.Point(0, 0);
             this.menuMain.Name = "menuMain";
             this.menuMain.Size = new System.Drawing.Size(800, 24);
-            this.menuMain.TabIndex = 4;
+            this.menuMain.TabIndex = 10;
             this.menuMain.Text = "menuStrip1";
             // 
             // mnuDatei
@@ -200,19 +212,20 @@
             // mnuDateiSpeichern
             // 
             this.mnuDateiSpeichern.Name = "mnuDateiSpeichern";
-            this.mnuDateiSpeichern.Size = new System.Drawing.Size(166, 22);
+            this.mnuDateiSpeichern.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
+            this.mnuDateiSpeichern.Size = new System.Drawing.Size(208, 22);
             this.mnuDateiSpeichern.Text = "Chart speichern...";
             this.mnuDateiSpeichern.Click += new System.EventHandler(this.mnuDateiSpeichern_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(163, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(205, 6);
             // 
             // mnuDateiBeenden
             // 
             this.mnuDateiBeenden.Name = "mnuDateiBeenden";
-            this.mnuDateiBeenden.Size = new System.Drawing.Size(166, 22);
+            this.mnuDateiBeenden.Size = new System.Drawing.Size(208, 22);
             this.mnuDateiBeenden.Text = "Beenden";
             this.mnuDateiBeenden.Click += new System.EventHandler(this.mnuDateiBeenden_Click);
             // 
@@ -313,6 +326,15 @@
             this.picLogo.TabIndex = 2;
             this.picLogo.TabStop = false;
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(471, 6);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(27, 13);
+            this.label5.TabIndex = 5;
+            this.label5.Text = "Jahr";
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -376,6 +398,8 @@
         private System.Windows.Forms.PictureBox picLogo;
         private System.Windows.Forms.ToolStripMenuItem mnuDateiSpeichern;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox cbJahr;
     }
 }
 
