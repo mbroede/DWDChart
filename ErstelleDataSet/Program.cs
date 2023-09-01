@@ -37,7 +37,7 @@ namespace CreateDataSet
         {
             public TMBR(string typ, string station, DateTime datum, float wert, int status = 0)
             {
-                this.Typ = typ; // Kennzahl Temperatur, Winde, Bewölkung usw.
+                this.Typ = typ; // Kennzahl Temperatur, Wind, Bewölkung usw.
                 this.Station = station;
                 this.Datum = datum;
                 this.Wert = wert;

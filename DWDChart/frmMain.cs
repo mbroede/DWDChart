@@ -11,12 +11,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
 namespace DWDChart
 {
@@ -528,7 +525,7 @@ bedeckt oder trüb                       Bedeckungsgrad tiefer und mittelhoher W
                 default:
                     break;
             }
-            caption += " - " + this.cbStation.Text;
+            caption += " in " + this.cbStation.Text;
 
             Title title = new Title();
             title.Font = new Font("Arial", 10, FontStyle.Bold);
